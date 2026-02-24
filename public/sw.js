@@ -5,11 +5,7 @@ const CACHE_NAME = 'texflow-v3-stable';
 const PRE_CACHE = [
   './',
   './index.html',
-  './manifest.json',
-  './index.tsx',
-  './App.tsx',
-  './types.ts',
-  './constants.ts'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
