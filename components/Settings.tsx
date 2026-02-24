@@ -386,25 +386,38 @@ const Settings: React.FC<SettingsProps> = ({ currentTheme, onToggleTheme, onRese
                         </div>
                     </div>
 
-                    <div className="space-y-2 relative">
-                        <label className="text-xs font-black uppercase text-slate-400 tracking-wider ml-1">
-                            Palavra-passe {editingUser && <span className="text-blue-500 normal-case font-medium">(deixe vazio para manter atual)</span>}
-                        </label>
-                        <div className="relative">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                value={formData.password}
-                                onChange={e => setFormData({...formData, password: e.target.value})}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase text-slate-400 tracking-wider ml-1">Perfil / Role</label>
+                            <select
+                                value={formData.role}
+                                onChange={e => setFormData({...formData, role: e.target.value as 'admin' | 'viewer'})}
                                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 px-4 text-slate-800 dark:text-slate-100 font-medium outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="••••••••"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                             >
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
+                                <option value="viewer">Viewer (Leitura/Operador)</option>
+                                <option value="admin">Admin (Administrador)</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2 relative">
+                            <label className="text-xs font-black uppercase text-slate-400 tracking-wider ml-1">
+                                Palavra-passe {editingUser && <span className="text-blue-500 normal-case font-medium">(deixe vazio para manter atual)</span>}
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={formData.password}
+                                    onChange={e => setFormData({...formData, password: e.target.value})}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 px-4 text-slate-800 dark:text-slate-100 font-medium outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
