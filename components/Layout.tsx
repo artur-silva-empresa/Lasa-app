@@ -33,19 +33,26 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, on
   const [isSectorsOpen, setIsSectorsOpen] = React.useState(false);
   const [isConfigOpen, setIsConfigOpen] = React.useState(false);
 
-  // Itens base disponíveis para todos
-  const baseMenuItems = [
-    { id: 'orders', label: 'Encomendas', icon: Package },
-    { id: 'timeline', label: 'Timeline', icon: Clock },
-  ];
+  // Itens dinâmicos baseados em permissões
+  const menuItems = React.useMemo(() => {
+    const items = [];
+    if (user?.permissions.dashboard !== 'none') {
+        items.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard });
+    }
+    if (user?.permissions.orders !== 'none') {
+        items.push({ id: 'orders', label: 'Encomendas', icon: Package });
+    }
+    if (user?.permissions.timeline !== 'none') {
+        items.push({ id: 'timeline', label: 'Timeline', icon: Clock });
+    }
+    return items;
+  }, [user]);
 
-  // Adicionar Dashboard apenas se for admin
-  const menuItems = user?.role === 'admin' 
-    ? [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, ...baseMenuItems]
-    : baseMenuItems;
+  const visibleSectors = React.useMemo(() => {
+    return SECTORS.filter(s => user?.permissions.sectors[s.id] && user.permissions.sectors[s.id] !== 'none');
+  }, [user]);
 
-  // Apenas Admin (Plan) vê configurações
-  const hasConfigAccess = user?.role === 'admin';
+  const hasConfigAccess = user?.permissions.config !== 'none' || user?.permissions.stopReasons !== 'none';
 
   const handleSectorClick = (sectorId: string) => {
     setActiveView(`sector-${sectorId}`);
@@ -102,9 +109,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, on
               </button>
 
               {/* Submenu Sectores */}
-              {isSectorsOpen && isSidebarOpen && (
+              {isSectorsOpen && isSidebarOpen && visibleSectors.length > 0 && (
                 <ul className="mt-1 ml-4 space-y-1 border-l border-slate-700 pl-2 animate-in slide-in-from-top-2 duration-200">
-                  {SECTORS.map((sector) => {
+                  {visibleSectors.map((sector) => {
                     const SectorIcon = sector.icon;
                     const isActive = activeView === `sector-${sector.id}`;
                     return (
@@ -150,32 +157,36 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, on
                 {/* Submenu Configurações */}
                 {isConfigOpen && isSidebarOpen && (
                   <ul className="mt-1 ml-4 space-y-1 border-l border-slate-700 pl-2 animate-in slide-in-from-top-2 duration-200">
-                    <li>
-                      <button
-                        onClick={() => setActiveView('config')}
-                        className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-sm ${
-                          activeView === 'config'
-                            ? 'text-blue-400 bg-slate-800/50 font-bold' 
-                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
-                        }`}
-                      >
-                        <Settings size={16} />
-                        <span>Geral</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => setActiveView('stop-reasons')}
-                        className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-sm ${
-                          activeView === 'stop-reasons'
-                            ? 'text-blue-400 bg-slate-800/50 font-bold' 
-                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
-                        }`}
-                      >
-                        <Clock size={16} />
-                        <span>Motivos de Paragens</span>
-                      </button>
-                    </li>
+                    {user?.permissions.config !== 'none' && (
+                      <li>
+                        <button
+                          onClick={() => setActiveView('config')}
+                          className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-sm ${
+                            activeView === 'config'
+                              ? 'text-blue-400 bg-slate-800/50 font-bold'
+                              : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                          }`}
+                        >
+                          <Settings size={16} />
+                          <span>Geral</span>
+                        </button>
+                      </li>
+                    )}
+                    {user?.permissions.stopReasons !== 'none' && (
+                      <li>
+                        <button
+                          onClick={() => setActiveView('stop-reasons')}
+                          className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-sm ${
+                            activeView === 'stop-reasons'
+                              ? 'text-blue-400 bg-slate-800/50 font-bold'
+                              : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                          }`}
+                        >
+                          <Clock size={16} />
+                          <span>Motivos de Paragens</span>
+                        </button>
+                      </li>
+                    )}
                   </ul>
                 )}
               </li>

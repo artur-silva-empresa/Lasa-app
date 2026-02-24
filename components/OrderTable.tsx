@@ -397,7 +397,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
 
   const handleManualClick = (e: React.MouseEvent, docNr: string, currentStatus: boolean) => {
       e.stopPropagation();
-      if (onUpdateManual && user?.role === 'admin') {
+      if (onUpdateManual && user?.permissions.orders === 'write') {
           onUpdateManual(docNr, !currentStatus);
       }
   };
@@ -453,7 +453,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                 </button>
 
                 {/* Botão Exportar BD */}
-                {user?.role === 'admin' && (
+                {user?.permissions.config === 'write' && (
                 <button 
                     onClick={handleExport}
                     disabled={isExporting}
@@ -610,7 +610,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                   {isExportingExcel ? <Loader2 size={18} className="animate-spin" /> : <FileSpreadsheet size={18} />}
                 </button>
 
-                {user?.role === 'admin' && (
+                {user?.permissions.config === 'write' && (
                     <button 
                     onClick={handleExport}
                     disabled={isExporting}
@@ -686,9 +686,9 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                             {/* Priority Flag */}
                             <div className="relative">
                                 <button 
-                                    onClick={(e) => user?.role === 'admin' ? handlePriorityClick(e, order.id) : null}
-                                    className={`transition-all ${user?.role === 'admin' ? 'hover:scale-110 active:scale-95 cursor-pointer' : 'cursor-default'}`}
-                                    title={user?.role === 'admin' ? "Alterar Prioridade" : "Prioridade"}
+                                    onClick={(e) => user?.permissions.orders === 'write' ? handlePriorityClick(e, order.id) : null}
+                                    className={`transition-all ${user?.permissions.orders === 'write' ? 'hover:scale-110 active:scale-95 cursor-pointer' : 'cursor-default'}`}
+                                    title={user?.permissions.orders === 'write' ? "Alterar Prioridade" : "Prioridade"}
                                 >
                                     <Flag size={16} className={getPriorityColor(order.priority || 0)} strokeWidth={2} />
                                 </button>
@@ -721,8 +721,8 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                             {/* Manual Confection 'M' Flag */}
                             <button
                                 onClick={(e) => handleManualClick(e, order.docNr, !!order.isManual)}
-                                className={`w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center border transition-all ${user?.role === 'admin' ? 'hover:scale-110 active:scale-95 cursor-pointer' : 'cursor-default'} ${order.isManual ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' : 'bg-slate-50 dark:bg-slate-800 text-slate-300 dark:text-slate-600 border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-400 dark:hover:text-slate-500'}`}
-                                title={user?.role === 'admin' ? "Alternar Confeção Manual" : "Confeção Manual"}
+                                className={`w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center border transition-all ${user?.permissions.orders === 'write' ? 'hover:scale-110 active:scale-95 cursor-pointer' : 'cursor-default'} ${order.isManual ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' : 'bg-slate-50 dark:bg-slate-800 text-slate-300 dark:text-slate-600 border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-400 dark:hover:text-slate-500'}`}
+                                title={user?.permissions.orders === 'write' ? "Alternar Confeção Manual" : "Confeção Manual"}
                             >
                                 M
                             </button>
@@ -776,7 +776,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                     <StopReasonSelector 
                         currentReason={order.sectorStopReasons?.['planeamento']} 
                         onSelect={(reason) => onUpdateStopReason?.(order.docNr, 'planeamento', reason)}
-                        disabled={user?.role !== 'admin'}
+                        disabled={user?.permissions.orders !== 'write'}
                         hierarchy={stopReasonsHierarchy}
                     />
                   </td>

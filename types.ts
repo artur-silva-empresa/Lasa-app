@@ -15,11 +15,24 @@ export enum SectorState {
 }
 
 export type UserRole = 'admin' | 'viewer';
+export type PermissionLevel = 'none' | 'read' | 'write';
+
+export interface UserPermissions {
+  dashboard: PermissionLevel;
+  orders: PermissionLevel;
+  timeline: PermissionLevel;
+  config: PermissionLevel;
+  stopReasons: PermissionLevel;
+  sectors: Record<string, PermissionLevel>;
+}
 
 export interface User {
+  id: string;
   username: string;
+  passwordHash?: string;
   role: UserRole;
   name: string;
+  permissions: UserPermissions;
 }
 
 export interface Sector {
