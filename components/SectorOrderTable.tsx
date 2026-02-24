@@ -79,7 +79,7 @@ const SectorOrderTable: React.FC<SectorOrderTableProps> = ({ orders, sector, onV
     return filteredOrders.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredOrders, currentPage]);
 
-  const canEdit = user?.permissions.sectors[sector.id] === 'write';
+  const canEdit = user?.permissions?.sectors?.[sector.id] === 'write';
 
   const handleEditClick = (order: Order, e: React.MouseEvent) => {
     e.stopPropagation();

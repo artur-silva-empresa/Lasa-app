@@ -295,7 +295,7 @@ const Settings: React.FC<SettingsProps> = ({ currentTheme, onToggleTheme, onRese
                                         <UserIcon size={12} /> {user.username}
                                     </span>
                                     <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                        <ShieldCheck size={12} /> {Object.values(user.permissions).filter(p => p !== 'none').length + Object.values(user.permissions.sectors).filter(p => p !== 'none').length} permissões
+                                        <ShieldCheck size={12} /> {Object.values(user.permissions || {}).filter(p => p !== 'none').length + Object.values(user.permissions?.sectors || {}).filter(p => p !== 'none').length} permissões
                                     </span>
                                 </div>
                             </div>
@@ -476,13 +476,13 @@ const Settings: React.FC<SettingsProps> = ({ currentTheme, onToggleTheme, onRese
                                                             permissions: {
                                                                 ...formData.permissions,
                                                                 sectors: {
-                                                                    ...formData.permissions.sectors,
+                                                                    ...(formData.permissions?.sectors || {}),
                                                                     [sector.id]: level
                                                                 }
                                                             }
                                                         })}
                                                         className={`px-2 py-1 rounded-md text-[9px] font-black uppercase transition-all ${
-                                                            (formData.permissions.sectors[sector.id] || 'none') === level
+                                                            (formData.permissions?.sectors?.[sector.id] || 'none') === level
                                                             ? (level === 'none' ? 'bg-rose-100 text-rose-600' : level === 'read' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600')
                                                             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                                                         }`}

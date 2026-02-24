@@ -322,7 +322,8 @@ const App: React.FC = () => {
         const sector = SECTORS.find(s => s.id === sectorId);
 
         // Permission Check
-        const permission = currentUser?.permissions.sectors[sectorId] || 'none';
+        const sectors = currentUser?.permissions?.sectors || {};
+        const permission = sectors[sectorId] || 'none';
         if (permission === 'none') {
             setActiveView('orders');
             return null;
@@ -355,10 +356,10 @@ const App: React.FC = () => {
 
     switch (activeView) {
       case 'dashboard':
-        if (currentUser?.permissions.dashboard === 'none') { setActiveView('orders'); return null; }
+        if (currentUser?.permissions?.dashboard === 'none') { setActiveView('orders'); return null; }
         return <Dashboard orders={orders} onNavigateToOrders={handleNavigateToOrders} />;
       case 'orders':
-        if (currentUser?.permissions.orders === 'none') { setActiveView('dashboard'); return null; }
+        if (currentUser?.permissions?.orders === 'none') { setActiveView('dashboard'); return null; }
         return <OrderTable 
           orders={orders} 
           onViewDetails={handleViewDetails} 
@@ -371,10 +372,10 @@ const App: React.FC = () => {
           stopReasonsHierarchy={stopReasons}
         />;
       case 'timeline':
-        if (currentUser?.permissions.timeline === 'none') { setActiveView('dashboard'); return null; }
+        if (currentUser?.permissions?.timeline === 'none') { setActiveView('dashboard'); return null; }
         return <OrderTimeline orders={orders} onViewDetails={handleViewDetails} />;
       case 'config':
-        if (currentUser?.permissions.config === 'none' && currentUser?.permissions.stopReasons === 'none') { setActiveView('dashboard'); return null; }
+        if (currentUser?.permissions?.config === 'none' && currentUser?.permissions?.stopReasons === 'none') { setActiveView('dashboard'); return null; }
         return (
           <Settings
             currentTheme={theme}

@@ -36,23 +36,24 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, on
   // Itens dinâmicos baseados em permissões
   const menuItems = React.useMemo(() => {
     const items = [];
-    if (user?.permissions.dashboard !== 'none') {
+    if (user?.permissions?.dashboard !== 'none') {
         items.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard });
     }
-    if (user?.permissions.orders !== 'none') {
+    if (user?.permissions?.orders !== 'none') {
         items.push({ id: 'orders', label: 'Encomendas', icon: Package });
     }
-    if (user?.permissions.timeline !== 'none') {
+    if (user?.permissions?.timeline !== 'none') {
         items.push({ id: 'timeline', label: 'Timeline', icon: Clock });
     }
     return items;
   }, [user]);
 
   const visibleSectors = React.useMemo(() => {
-    return SECTORS.filter(s => user?.permissions.sectors[s.id] && user.permissions.sectors[s.id] !== 'none');
+    const sectors = user?.permissions?.sectors || {};
+    return SECTORS.filter(s => sectors[s.id] && sectors[s.id] !== 'none');
   }, [user]);
 
-  const hasConfigAccess = user?.permissions.config !== 'none' || user?.permissions.stopReasons !== 'none';
+  const hasConfigAccess = user?.permissions?.config !== 'none' || user?.permissions?.stopReasons !== 'none';
 
   const handleSectorClick = (sectorId: string) => {
     setActiveView(`sector-${sectorId}`);
@@ -157,7 +158,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, on
                 {/* Submenu Configurações */}
                 {isConfigOpen && isSidebarOpen && (
                   <ul className="mt-1 ml-4 space-y-1 border-l border-slate-700 pl-2 animate-in slide-in-from-top-2 duration-200">
-                    {user?.permissions.config !== 'none' && (
+                    {user?.permissions?.config !== 'none' && (
                       <li>
                         <button
                           onClick={() => setActiveView('config')}
@@ -172,7 +173,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, on
                         </button>
                       </li>
                     )}
-                    {user?.permissions.stopReasons !== 'none' && (
+                    {user?.permissions?.stopReasons !== 'none' && (
                       <li>
                         <button
                           onClick={() => setActiveView('stop-reasons')}
