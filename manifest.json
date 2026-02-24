@@ -1,0 +1,33 @@
+
+{
+  "short_name": "TexFlow",
+  "name": "TexFlow - Gestão de Produção Têxtil",
+  "description": "Sistema avançado para gestão e acompanhamento de encomendas industriais.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2611/2611152.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2611/2611152.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0f172a",
+  "background_color": "#f8fafc",
+  "categories": ["business", "productivity"],
+  "screenshots": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2611/2611152.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
