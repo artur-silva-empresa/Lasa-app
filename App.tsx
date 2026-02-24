@@ -301,6 +301,20 @@ const App: React.FC = () => {
       setActiveView('orders');
   };
   
+  const getFirstAvailableView = (user: User | null): string => {
+    if (!user) return 'login';
+    if (user.permissions.dashboard !== 'none') return 'dashboard';
+    if (user.permissions.orders !== 'none') return 'orders';
+    if (user.permissions.timeline !== 'none') return 'timeline';
+
+    const firstSector = SECTORS.find(s => user.permissions.sectors[s.id] && user.permissions.sectors[s.id] !== 'none');
+    if (firstSector) return `sector-${firstSector.id}`;
+
+    if (user.permissions.config !== 'none' || user.permissions.stopReasons !== 'none') return 'config';
+
+    return 'none';
+  };
+
   // Reset do filtro ao mudar de vista manualmente
   const handleSetActiveView = (view: string) => {
       if (view !== 'orders') setActiveDashboardFilter(null);
@@ -356,10 +370,16 @@ const App: React.FC = () => {
 
     switch (activeView) {
       case 'dashboard':
-        if (currentUser?.permissions?.dashboard === 'none') { setActiveView('orders'); return null; }
+        if (currentUser?.permissions?.dashboard === 'none') {
+            const fallback = getFirstAvailableView(currentUser);
+            if (fallback !== 'dashboard') { setActiveView(fallback); return null; }
+        }
         return <Dashboard orders={orders} onNavigateToOrders={handleNavigateToOrders} />;
       case 'orders':
-        if (currentUser?.permissions?.orders === 'none') { setActiveView('dashboard'); return null; }
+        if (currentUser?.permissions?.orders === 'none') {
+            const fallback = getFirstAvailableView(currentUser);
+            if (fallback !== 'orders') { setActiveView(fallback); return null; }
+        }
         return <OrderTable 
           orders={orders} 
           onViewDetails={handleViewDetails} 
@@ -372,10 +392,16 @@ const App: React.FC = () => {
           stopReasonsHierarchy={stopReasons}
         />;
       case 'timeline':
-        if (currentUser?.permissions?.timeline === 'none') { setActiveView('dashboard'); return null; }
+        if (currentUser?.permissions?.timeline === 'none') {
+            const fallback = getFirstAvailableView(currentUser);
+            if (fallback !== 'timeline') { setActiveView(fallback); return null; }
+        }
         return <OrderTimeline orders={orders} onViewDetails={handleViewDetails} />;
       case 'config':
-        if (currentUser?.permissions?.config === 'none' && currentUser?.permissions?.stopReasons === 'none') { setActiveView('dashboard'); return null; }
+        if (currentUser?.permissions?.config === 'none' && currentUser?.permissions?.stopReasons === 'none') {
+            const fallback = getFirstAvailableView(currentUser);
+            if (fallback !== 'config') { setActiveView(fallback); return null; }
+        }
         return (
           <Settings
             currentTheme={theme}
@@ -388,6 +414,22 @@ const App: React.FC = () => {
         );
       case 'stop-reasons':
         return <StopReasons hierarchy={stopReasons} onUpdateHierarchy={handleUpdateStopReasonsHierarchy} />;
+      case 'none':
+        return (
+            <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                    <X size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Acesso Restrito</h2>
+                <p className="text-slate-500 dark:text-slate-400 max-w-xs">Não tem permissões para visualizar nenhuma página do sistema. Contacte o administrador.</p>
+                <button
+                    onClick={() => setCurrentUser(null)}
+                    className="mt-6 text-blue-600 font-bold hover:underline"
+                >
+                    Voltar ao Login
+                </button>
+            </div>
+        );
       default:
         return <Dashboard orders={orders} />;
     }
@@ -403,8 +445,17 @@ const App: React.FC = () => {
     return (
       <Login onLogin={(user) => {
         setCurrentUser(user);
-        // Se for admin vai para dashboard, se for viewer (Lasa) vai diretamente para orders
-        setActiveView(user.role === 'admin' ? 'dashboard' : 'orders');
+
+        // Determinar vista inicial baseada em permissões
+        let initialView = user.role === 'admin' ? 'dashboard' : 'orders';
+
+        // Validar se tem permissão para a vista inicial
+        const perms: any = user.permissions;
+        if (perms[initialView] === 'none') {
+            initialView = getFirstAvailableView(user);
+        }
+
+        setActiveView(initialView);
       }} />
     );
   }
