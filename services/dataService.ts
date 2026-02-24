@@ -1,16 +1,18 @@
 
 import * as XLSX from 'xlsx';
 import initSqlJs from 'sql.js';
-import { Order, OrderState, SectorState, DashboardKPIs } from '../types';
+import { Order, OrderState, SectorState, DashboardKPIs, User, UserRole, PermissionLevel } from '../types';
 import { parseExcelDate, formatDate } from '../utils/formatters';
+import { SECTORS } from '../constants';
 
 // --- PERSISTÊNCIA (IndexedDB) ---
 const DB_NAME = 'TexFlowData';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_HANDLES = 'handles';
 const STORE_ORDERS = 'orders';
 const STORE_HEADERS = 'headers';
 const STORE_STOP_REASONS = 'stop_reasons';
+const STORE_USERS = 'users';
 
 const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -30,6 +32,9 @@ const initDB = (): Promise<IDBDatabase> => {
       if (!db.objectStoreNames.contains(STORE_STOP_REASONS)) {
         db.createObjectStore(STORE_STOP_REASONS);
       }
+      if (!db.objectStoreNames.contains(STORE_USERS)) {
+        db.createObjectStore(STORE_USERS, { keyPath: 'id' });
+      }
     };
     
     request.onsuccess = (event: any) => resolve(event.target.result);
@@ -38,6 +43,92 @@ const initDB = (): Promise<IDBDatabase> => {
 };
 
 // --- DATA PERSISTENCE HELPERS ---
+
+export const hashPassword = async (password: string): Promise<string> => {
+    const msgUint8 = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+};
+
+export const saveUserToDB = async (user: User) => {
+    const db = await initDB();
+    return new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(STORE_USERS, 'readwrite');
+        tx.objectStore(STORE_USERS).put(user);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+};
+
+export const deleteUserFromDB = async (userId: string) => {
+    const db = await initDB();
+    return new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(STORE_USERS, 'readwrite');
+        tx.objectStore(STORE_USERS).delete(userId);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+};
+
+export const loadUsersFromDB = async (): Promise<User[]> => {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_USERS, 'readonly');
+        const req = tx.objectStore(STORE_USERS).getAll();
+        tx.oncomplete = () => resolve(req.result || []);
+        tx.onerror = () => reject(tx.error);
+    });
+};
+
+export const initializeDefaultUsers = async () => {
+    const users = await loadUsersFromDB();
+    if (users.length === 0) {
+        const adminPerms: any = {
+            dashboard: 'write',
+            orders: 'write',
+            timeline: 'write',
+            config: 'write',
+            stopReasons: 'write',
+            sectors: {}
+        };
+        SECTORS.forEach(s => adminPerms.sectors[s.id] = 'write');
+
+        const viewerPerms: any = {
+            dashboard: 'none',
+            orders: 'read',
+            timeline: 'read',
+            config: 'none',
+            stopReasons: 'none',
+            sectors: {}
+        };
+        SECTORS.forEach(s => viewerPerms.sectors[s.id] = 'read');
+
+        const planUser: User = {
+            id: '1',
+            username: 'Plan',
+            name: 'Planeamento',
+            passwordHash: await hashPassword('Lasa'),
+            role: 'admin',
+            permissions: adminPerms
+        };
+
+        const lasaUser: User = {
+            id: '2',
+            username: 'Lasa',
+            name: 'Utilizador Lasa',
+            passwordHash: await hashPassword(''),
+            role: 'viewer',
+            permissions: viewerPerms
+        };
+
+        await saveUserToDB(planUser);
+        await saveUserToDB(lasaUser);
+        return [planUser, lasaUser];
+    }
+    return users;
+};
 
 export const saveStopReasonsToDB = async (hierarchy: any[]) => {
     const db = await initDB();

@@ -20,7 +20,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
   const [obsText, setObsText] = React.useState('');
   const [stopReason, setStopReason] = React.useState('');
 
-  const canEdit = user?.role === 'admin';
+  const canEdit = editingSector ? (user?.permissions.sectors[editingSector.id] === 'write') : false;
 
   const handleSectorClick = (sector: Sector) => {
     setEditingSector(sector);
@@ -29,7 +29,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
   };
 
   const handleSaveObservation = () => {
-    if (!editingSector || !canEdit) return;
+    if (!editingSector || user?.permissions.sectors[editingSector.id] !== 'write') return;
     const updatedObservations = { ...(order.sectorObservations || {}), [editingSector.id]: obsText };
     const updatedStopReasons = { ...(order.sectorStopReasons || {}), [editingSector.id]: stopReason };
     onUpdateOrder({ 
@@ -142,7 +142,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
             <section>
               <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 text-center">Fluxo de Produção</h3>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-y-3 gap-x-2">
-                {SECTORS.map((s) => {
+                {SECTORS.filter(s => user?.permissions.sectors[s.id] !== 'none').map((s) => {
                   const sectorState = getSectorState(order, s.id);
                   const producedQty = getSectorProducedQty(s.id);
                   const hasObs = order.sectorObservations?.[s.id];
@@ -271,6 +271,11 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
                 const reason = order.sectorStopReasons?.[sector.id];
                 const SectorIcon = sector.icon;
                 const sectorDate = getSectorDate(sector.id);
+                const hasSectorWritePerm = user?.permissions.sectors[sector.id] === 'write';
+                const hasSectorReadPerm = user?.permissions.sectors[sector.id] !== 'none';
+
+                if (!hasSectorReadPerm) return null;
+
                 return (
                   <button 
                     key={sector.id} 
@@ -299,7 +304,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
                       </div>
                     </div>
                     <p className={`mt-2 pl-3 text-sm whitespace-pre-wrap break-words ${obs ? 'text-slate-700 dark:text-slate-300 border-l-2 border-slate-200 dark:border-slate-700' : 'text-slate-400 dark:text-slate-600 italic'}`}>
-                      {obs || (canEdit ? 'Sem observações (Clique para editar)' : 'Sem observações')}
+                      {obs || (hasSectorWritePerm ? 'Sem observações (Clique para editar)' : 'Sem observações')}
                     </p>
                   </button>
                 );

@@ -10,7 +10,7 @@ import {
   X,
   Check
 } from 'lucide-react';
-import { Order, Sector } from '../types';
+import { Order, Sector, User } from '../types';
 import { formatDate } from '../utils/formatters';
 import StopReasonSelector from './StopReasonSelector';
 
@@ -20,11 +20,12 @@ interface SectorOrderTableProps {
   onViewDetails: (order: Order) => void;
   onUpdateOrder: (order: Order) => void;
   stopReasonsHierarchy: any[];
+  user: User | null;
 }
 
 const ITEMS_PER_PAGE = 50;
 
-const SectorOrderTable: React.FC<SectorOrderTableProps> = ({ orders, sector, onViewDetails, onUpdateOrder, stopReasonsHierarchy }) => {
+const SectorOrderTable: React.FC<SectorOrderTableProps> = ({ orders, sector, onViewDetails, onUpdateOrder, stopReasonsHierarchy, user }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const deferredSearch = React.useDeferredValue(searchTerm);
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -78,8 +79,11 @@ const SectorOrderTable: React.FC<SectorOrderTableProps> = ({ orders, sector, onV
     return filteredOrders.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredOrders, currentPage]);
 
+  const canEdit = user?.permissions.sectors[sector.id] === 'write';
+
   const handleEditClick = (order: Order, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!canEdit) return;
     setEditingId(order.id);
     setEditObs(order.sectorObservations?.[sector.id] || '');
     
@@ -222,6 +226,7 @@ const SectorOrderTable: React.FC<SectorOrderTableProps> = ({ orders, sector, onV
                           sectorStopReasons: { ...(order.sectorStopReasons || {}), [sector.id]: reason } 
                         })}
                         hierarchy={stopReasonsHierarchy}
+                        disabled={!canEdit}
                     />
                   </td>
 
@@ -253,6 +258,7 @@ const SectorOrderTable: React.FC<SectorOrderTableProps> = ({ orders, sector, onV
                             </button>
                         </div>
                     ) : (
+                        canEdit && (
                         <button 
                             onClick={(e) => handleEditClick(order, e)}
                             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -260,6 +266,7 @@ const SectorOrderTable: React.FC<SectorOrderTableProps> = ({ orders, sector, onV
                         >
                             <Edit2 size={14} />
                         </button>
+                        )
                     )}
                   </td>
                 </tr>

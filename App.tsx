@@ -10,7 +10,7 @@ import Settings from './components/Settings';
 import StopReasons from './components/StopReasons';
 import Login from './components/Login';
 import { Order, User } from './types';
-import { generateMockOrders, loadOrdersFromDB, saveOrdersToDB, clearOrdersFromDB, loadStopReasonsFromDB, saveStopReasonsToDB } from './services/dataService';
+import { generateMockOrders, loadOrdersFromDB, saveOrdersToDB, clearOrdersFromDB, loadStopReasonsFromDB, saveStopReasonsToDB, loadUsersFromDB, initializeDefaultUsers, saveUserToDB, deleteUserFromDB } from './services/dataService';
 import { WifiOff, CheckCircle2, X, Download, Loader2 } from 'lucide-react';
 import { SECTORS, STOP_REASONS_HIERARCHY } from './constants';
 
@@ -19,6 +19,7 @@ import SectorOrderTable from './components/SectorOrderTable';
 const App: React.FC = () => {
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [stopReasons, setStopReasons] = React.useState<any[]>(STOP_REASONS_HIERARCHY);
+  const [users, setUsers] = React.useState<User[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [activeView, setActiveView] = React.useState('dashboard');
   const [selectedOrderId, setSelectedOrderId] = React.useState<string | null>(null);
@@ -108,9 +109,10 @@ const App: React.FC = () => {
     const initData = async () => {
       setIsLoading(true);
       try {
-        const [savedData, savedStopReasons] = await Promise.all([
+        const [savedData, savedStopReasons, initialUsers] = await Promise.all([
           loadOrdersFromDB(),
-          loadStopReasonsFromDB()
+          loadStopReasonsFromDB(),
+          initializeDefaultUsers()
         ]);
         
         if (savedData && savedData.orders.length > 0) {
@@ -123,6 +125,10 @@ const App: React.FC = () => {
 
         if (savedStopReasons) {
           setStopReasons(savedStopReasons);
+        }
+
+        if (initialUsers) {
+          setUsers(initialUsers);
         }
       } catch (e) {
         console.error("Erro ao carregar dados:", e);
@@ -184,6 +190,20 @@ const App: React.FC = () => {
   const handleUpdateStopReasonsHierarchy = (newHierarchy: any[]) => {
     setStopReasons(newHierarchy);
     saveStopReasonsToDB(newHierarchy).catch(err => console.error("Erro ao guardar motivos:", err));
+  };
+
+  const handleSaveUser = async (user: User) => {
+    await saveUserToDB(user);
+    const updatedUsers = await loadUsersFromDB();
+    setUsers(updatedUsers);
+    setNotification({ message: 'Utilizador guardado com sucesso.', type: 'success' });
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    await deleteUserFromDB(userId);
+    const updatedUsers = await loadUsersFromDB();
+    setUsers(updatedUsers);
+    setNotification({ message: 'Utilizador removido com sucesso.', type: 'success' });
   };
 
   const handleImport = (
@@ -300,6 +320,14 @@ const App: React.FC = () => {
     if (activeView.startsWith('sector-')) {
         const sectorId = activeView.replace('sector-', '');
         const sector = SECTORS.find(s => s.id === sectorId);
+
+        // Permission Check
+        const permission = currentUser?.permissions.sectors[sectorId] || 'none';
+        if (permission === 'none') {
+            setActiveView('orders');
+            return null;
+        }
+
         return (
             <div className="flex flex-col h-full">
                 <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
@@ -318,6 +346,7 @@ const App: React.FC = () => {
                         onViewDetails={handleViewDetails} 
                         onUpdateOrder={handleUpdateOrder}
                         stopReasonsHierarchy={stopReasons}
+                        user={currentUser}
                     />
                 </div>
             </div>
@@ -326,8 +355,10 @@ const App: React.FC = () => {
 
     switch (activeView) {
       case 'dashboard':
+        if (currentUser?.permissions.dashboard === 'none') { setActiveView('orders'); return null; }
         return <Dashboard orders={orders} onNavigateToOrders={handleNavigateToOrders} />;
       case 'orders':
+        if (currentUser?.permissions.orders === 'none') { setActiveView('dashboard'); return null; }
         return <OrderTable 
           orders={orders} 
           onViewDetails={handleViewDetails} 
@@ -340,9 +371,20 @@ const App: React.FC = () => {
           stopReasonsHierarchy={stopReasons}
         />;
       case 'timeline':
+        if (currentUser?.permissions.timeline === 'none') { setActiveView('dashboard'); return null; }
         return <OrderTimeline orders={orders} onViewDetails={handleViewDetails} />;
       case 'config':
-        return <Settings currentTheme={theme} onToggleTheme={toggleTheme} onResetData={handleResetData} />;
+        if (currentUser?.permissions.config === 'none' && currentUser?.permissions.stopReasons === 'none') { setActiveView('dashboard'); return null; }
+        return (
+          <Settings
+            currentTheme={theme}
+            onToggleTheme={toggleTheme}
+            onResetData={handleResetData}
+            users={users}
+            onSaveUser={handleSaveUser}
+            onDeleteUser={handleDeleteUser}
+          />
+        );
       case 'stop-reasons':
         return <StopReasons hierarchy={stopReasons} onUpdateHierarchy={handleUpdateStopReasonsHierarchy} />;
       default:

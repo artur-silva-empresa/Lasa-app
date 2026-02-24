@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { User, UserRole } from '../types';
-import { Lock, User as UserIcon, ArrowRight, AlertCircle } from 'lucide-react';
+import { User } from '../types';
+import { Lock, User as UserIcon, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { loadUsersFromDB, hashPassword, initializeDefaultUsers } from '../services/dataService';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -11,31 +12,33 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
+  const [isAuthenticating, setIsAuthenticating] = React.useState(false);
   
   const passwordInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsAuthenticating(true);
 
-    // Credenciais Hardcoded conforme pedido
-    // 1 - Planeamento (Plan / Lasa) -> Permite tudo (admin)
-    // 2 - Utilizador (Lasa / "") -> Apenas leitura obs (viewer)
+    try {
+        const users = await loadUsersFromDB();
+        // Se por algum motivo não houver utilizadores, tenta inicializar
+        const finalUsers = users.length > 0 ? users : await initializeDefaultUsers();
 
-    if (username.toLowerCase() === 'plan' && password === 'Lasa') {
-      onLogin({
-        username: 'Plan',
-        name: 'Planeamento',
-        role: 'admin'
-      });
-    } else if (username.toLowerCase() === 'lasa' && password === '') {
-      onLogin({
-        username: 'Lasa',
-        name: 'Utilizador Lasa',
-        role: 'viewer'
-      });
-    } else {
-      setError('Credenciais inválidas. Tente novamente.');
+        const inputHash = await hashPassword(password);
+        const user = finalUsers.find(u => u.username.toLowerCase() === username.toLowerCase() && u.passwordHash === inputHash);
+
+        if (user) {
+            onLogin(user);
+        } else {
+            setError('Credenciais inválidas. Tente novamente.');
+        }
+    } catch (err) {
+        console.error(err);
+        setError('Erro ao aceder à base de dados de utilizadores.');
+    } finally {
+        setIsAuthenticating(false);
     }
   };
   
@@ -97,9 +100,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <button 
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-transform active:scale-95"
+            disabled={isAuthenticating}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Entrar no Sistema <ArrowRight size={18} />
+            {isAuthenticating ? (
+                <>A verificar... <Loader2 size={18} className="animate-spin" /></>
+            ) : (
+                <>Entrar no Sistema <ArrowRight size={18} /></>
+            )}
           </button>
         </form>
         
