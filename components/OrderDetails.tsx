@@ -20,7 +20,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
   const [obsText, setObsText] = React.useState('');
   const [stopReason, setStopReason] = React.useState('');
 
-  const canEdit = editingSector ? (user?.permissions.sectors[editingSector.id] === 'write') : false;
+  const canEdit = editingSector ? (user?.permissions?.sectors?.[editingSector.id] === 'write') : false;
 
   const handleSectorClick = (sector: Sector) => {
     setEditingSector(sector);
@@ -29,7 +29,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
   };
 
   const handleSaveObservation = () => {
-    if (!editingSector || user?.permissions.sectors[editingSector.id] !== 'write') return;
+    if (!editingSector || user?.permissions?.sectors?.[editingSector.id] !== 'write') return;
     const updatedObservations = { ...(order.sectorObservations || {}), [editingSector.id]: obsText };
     const updatedStopReasons = { ...(order.sectorStopReasons || {}), [editingSector.id]: stopReason };
     onUpdateOrder({ 
@@ -142,7 +142,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
             <section>
               <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 text-center">Fluxo de Produção</h3>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-y-3 gap-x-2">
-                {SECTORS.filter(s => user?.permissions.sectors[s.id] !== 'none').map((s) => {
+                {SECTORS.filter(s => user?.permissions?.sectors?.[s.id] && user.permissions.sectors[s.id] !== 'none').map((s) => {
                   const sectorState = getSectorState(order, s.id);
                   const producedQty = getSectorProducedQty(s.id);
                   const hasObs = order.sectorObservations?.[s.id];
@@ -271,8 +271,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onClose, onUpdateOrd
                 const reason = order.sectorStopReasons?.[sector.id];
                 const SectorIcon = sector.icon;
                 const sectorDate = getSectorDate(sector.id);
-                const hasSectorWritePerm = user?.permissions.sectors[sector.id] === 'write';
-                const hasSectorReadPerm = user?.permissions.sectors[sector.id] !== 'none';
+                const sectors = user?.permissions?.sectors || {};
+                const hasSectorWritePerm = sectors[sector.id] === 'write';
+                const hasSectorReadPerm = sectors[sector.id] && sectors[sector.id] !== 'none';
 
                 if (!hasSectorReadPerm) return null;
 
