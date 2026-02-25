@@ -15,21 +15,38 @@
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2611/2611152.png">
     
     <title>TexFlow - Gestão de Encomendas</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
+    <script>
+        // Global error handler for diagnosis
+        window.onerror = function(msg, url, line, col, error) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:white;color:red;padding:20px;z-index:99999;border:5px solid red;overflow:auto;max-height:50vh;font-family:monospace;font-size:12px;';
+            errorDiv.innerHTML = '<strong>Erro de Runtime Detectado:</strong><br>' + msg +
+                                '<br><br><strong>Ficheiro:</strong> ' + url +
+                                '<br><strong>Linha/Col:</strong> ' + line + ':' + col +
+                                (error && error.stack ? '<br><br><strong>Stack:</strong><br>' + error.stack.replace(/\n/g, '<br>') : '');
+            document.body.appendChild(errorDiv);
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            window.onerror('Promise Rejection: ' + event.reason, '', '', '', event.reason);
+        });
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        slate: {
-                            850: '#151e2e', // Custom dark shade
-                            950: '#020617',
+        if (window.tailwind) {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            slate: {
+                                850: '#151e2e', // Custom dark shade
+                                950: '#020617',
+                            }
                         }
                     }
                 }
-            }
+            };
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -93,6 +110,6 @@
             });
         }
     </script>
-<script type="module" src="./index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

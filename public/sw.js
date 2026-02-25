@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'texflow-v3-stable';
+const CACHE_NAME = 'texflow-v4-stable';
 
 // Assets internos críticos
 const PRE_CACHE = [
