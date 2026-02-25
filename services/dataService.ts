@@ -512,7 +512,11 @@ export const parseSQLiteFile = async (file: File): Promise<{ orders: Order[], he
         const orders: Order[] = values.map((row: any[]) => {
             const obj: any = {};
             columns.forEach((col, i) => obj[col] = row[i]);
-            const dateFields = ['issueDate', 'requestedDate', 'dataTec', 'felpoCruDate', 'tinturariaDate', 'confDate', 'armExpDate', 'dataEnt'];
+            const dateFields = [
+                'issueDate', 'requestedDate', 'dataTec', 'felpoCruDate', 'tinturariaDate',
+                'confDate', 'armExpDate', 'dataEnt', 'dataEspecial', 'dataPrinter',
+                'dataDebuxo', 'dataAmostras', 'dataBordados'
+            ];
             dateFields.forEach(field => { if (obj[field]) obj[field] = new Date(obj[field]); });
             if (obj.sectorObservations) {
                 try { obj.sectorObservations = JSON.parse(obj.sectorObservations); } catch { obj.sectorObservations = {}; }
@@ -565,16 +569,19 @@ export const exportOrdersToSQLite = async (orders: Order[], headers: Record<stri
       confRoupoesQty REAL, confFelposQty REAL, confDate INTEGER,
       embAcabQty REAL, armExpDate INTEGER, stockCxQty REAL,
       dataEnt INTEGER, qtyBilled REAL, qtyOpen REAL,
-      sectorObservations TEXT, sectorPredictedDates TEXT, priority INTEGER, isManual INTEGER, sectorStopReasons TEXT
+      sectorObservations TEXT, sectorPredictedDates TEXT, priority INTEGER, isManual INTEGER, sectorStopReasons TEXT,
+      dataEspecial INTEGER, dataPrinter INTEGER, dataDebuxo INTEGER, dataAmostras INTEGER, dataBordados INTEGER
     );
   `;
   db.run(schema);
 
   db.run("BEGIN TRANSACTION");
+  // 42 colunas no total
   const stmt = db.prepare(`
     INSERT INTO orders VALUES (
       ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?
     )
   `);
 
@@ -595,7 +602,12 @@ export const exportOrdersToSQLite = async (orders: Order[], headers: Record<stri
         JSON.stringify(o.sectorPredictedDates || {}),
         o.priority || 0,
         o.isManual ? 1 : 0,
-        JSON.stringify(o.sectorStopReasons || {})
+        JSON.stringify(o.sectorStopReasons || {}),
+        o.dataEspecial ? o.dataEspecial.getTime() : null,
+        o.dataPrinter ? o.dataPrinter.getTime() : null,
+        o.dataDebuxo ? o.dataDebuxo.getTime() : null,
+        o.dataAmostras ? o.dataAmostras.getTime() : null,
+        o.dataBordados ? o.dataBordados.getTime() : null
       ]);
   });
   
