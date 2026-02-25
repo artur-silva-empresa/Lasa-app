@@ -57,7 +57,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
   
   // Estados dos Filtros
   const [filterDocSeries, setFilterDocSeries] = React.useState('All');
-  const [filterClient, setFilterClient] = React.useState('All');
+  const [filterComercial, setFilterComercial] = React.useState('All');
   const [filterReference, setFilterReference] = React.useState('All');
   const [filterStatus, setFilterStatus] = React.useState('All');
   const [filterPriority, setFilterPriority] = React.useState('All'); 
@@ -137,12 +137,12 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
     return Array.from(set).sort();
   }, [orders]);
 
-  const clientOptions = React.useMemo(() => {
+  const comercialOptions = React.useMemo(() => {
     let filtered = orders;
     if (filterDocSeries !== 'All') {
         filtered = filtered.filter(o => getDocSeries(o.docNr) === filterDocSeries);
     }
-    const set = new Set(filtered.map(o => o.clientName).filter(Boolean));
+    const set = new Set(filtered.map(o => o.comercial).filter(Boolean));
     return Array.from(set).sort();
   }, [orders, filterDocSeries]);
 
@@ -151,12 +151,12 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
     if (filterDocSeries !== 'All') {
         filtered = filtered.filter(o => getDocSeries(o.docNr) === filterDocSeries);
     }
-    if (filterClient !== 'All') {
-        filtered = filtered.filter(o => o.clientName === filterClient);
+    if (filterComercial !== 'All') {
+        filtered = filtered.filter(o => o.comercial === filterComercial);
     }
     const set = new Set(filtered.map(o => o.reference).filter(Boolean));
     return Array.from(set).sort();
-  }, [orders, filterDocSeries, filterClient]);
+  }, [orders, filterDocSeries, filterComercial]);
 
   const hasObservations = (order: Order) => {
     return order.sectorObservations && Object.values(order.sectorObservations).some(v => v && v.trim() !== '');
@@ -190,7 +190,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
 
     return orders.filter(o => {
       const matchesDocSeries = filterDocSeries === 'All' || getDocSeries(o.docNr) === filterDocSeries;
-      const matchesClient = filterClient === 'All' || o.clientName === filterClient;
+      const matchesComercial = filterComercial === 'All' || o.comercial === filterComercial;
       const matchesReference = filterReference === 'All' || o.reference === filterReference;
 
       let matchesStatus = true;
@@ -249,31 +249,32 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                             (o.docNr || '').toLowerCase().includes(search) || 
                             (o.po || '').toLowerCase().includes(search) ||
                             (o.reference || '').toLowerCase().includes(search) ||
+                            (o.comercial || '').toLowerCase().includes(search) ||
                             (o.clientName || '').toLowerCase().includes(search) ||
                             (o.family || '').toLowerCase().includes(search) ||
                             (o.sizeDesc || '').toLowerCase().includes(search);
       
-      return matchesDocSeries && matchesClient && matchesReference && matchesStatus && matchesSearch && matchesObservations && matchesWeek && matchesFlags;
+      return matchesDocSeries && matchesComercial && matchesReference && matchesStatus && matchesSearch && matchesObservations && matchesWeek && matchesFlags;
     });
-  }, [orders, deferredSearch, filterStatus, filterDocSeries, filterClient, filterReference, filterHasObservations, filterDate, filterPriority, filterManual, activeFilter]);
+  }, [orders, deferredSearch, filterStatus, filterDocSeries, filterComercial, filterReference, filterHasObservations, filterDate, filterPriority, filterManual, activeFilter]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [deferredSearch, filterDocSeries, filterClient, filterReference, filterStatus, filterHasObservations, filterDate, filterPriority, filterManual]);
+  }, [deferredSearch, filterDocSeries, filterComercial, filterReference, filterStatus, filterHasObservations, filterDate, filterPriority, filterManual]);
 
   React.useEffect(() => {
-    setFilterClient('All');
+    setFilterComercial('All');
     setFilterReference('All');
   }, [filterDocSeries]);
 
   React.useEffect(() => {
     setFilterReference('All');
-  }, [filterClient]);
+  }, [filterComercial]);
 
   const handleResetFilters = () => {
     setSearchTerm('');
     setFilterDocSeries('All');
-    setFilterClient('All');
+    setFilterComercial('All');
     setFilterReference('All');
     setFilterStatus('All');
     setFilterPriority('All');
@@ -290,7 +291,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
       }
   };
 
-  const hasActiveFilters = searchTerm !== '' || filterDocSeries !== 'All' || filterClient !== 'All' || filterReference !== 'All' || filterStatus !== 'All' || filterPriority !== 'All' || filterHasObservations || filterDate !== null || filterManual;
+  const hasActiveFilters = searchTerm !== '' || filterDocSeries !== 'All' || filterComercial !== 'All' || filterReference !== 'All' || filterStatus !== 'All' || filterPriority !== 'All' || filterHasObservations || filterDate !== null || filterManual;
 
   const handleExport = async () => {
     if (finalFilteredOrders.length === 0) return;
@@ -567,12 +568,12 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                 <Users size={14} className="text-slate-400" />
                 <select 
                   className="bg-transparent outline-none text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer min-w-[120px] max-w-[200px] w-full md:w-auto truncate"
-                  value={filterClient}
-                  onChange={(e) => setFilterClient(e.target.value)}
-                  disabled={clientOptions.length === 0 && filterDocSeries === 'All'}
+                  value={filterComercial}
+                  onChange={(e) => setFilterComercial(e.target.value)}
+                  disabled={comercialOptions.length === 0 && filterDocSeries === 'All'}
                 >
-                  <option value="All" className="dark:bg-slate-900">Todos os Clientes</option>
-                  {clientOptions.map(opt => <option key={opt} value={opt} className="dark:bg-slate-900">{opt}</option>)}
+                  <option value="All" className="dark:bg-slate-900">Todos os Comerciais</option>
+                  {comercialOptions.map(opt => <option key={opt} value={opt} className="dark:bg-slate-900">{opt}</option>)}
                 </select>
               </div>
 
@@ -656,7 +657,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                         </div>
                     </div>
                 </th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap w-[35%]">Cliente / Ref + Cor</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap w-[35%]">Cliente (Comercial) / Ref + Cor</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap w-[10%]">Medida / Família</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap w-[15%]">Qtd. Pedida / Entrega</th>
                 <th className="px-2 py-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center w-[5%]">
@@ -738,6 +739,7 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
                     <div className="flex flex-col gap-0.5">
                         <span className="text-sm font-black text-slate-900 dark:text-white leading-tight block truncate max-w-[400px]" title={order.clientName}>
                             {order.clientName || <span className="text-slate-300 italic">Sem Cliente</span>}
+                            {order.comercial && <span className="ml-2 text-[10px] text-blue-500 dark:text-blue-400 font-bold">({order.comercial})</span>}
                         </span>
                         <div className="flex items-center gap-1.5 text-[11px] max-w-[400px] mt-1">
                             <span className="font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 whitespace-nowrap" title="Referência">
@@ -826,8 +828,11 @@ const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewDetail
               
               <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2">
                 <div className="col-span-2">
-                   <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Cliente</p>
-                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">{order.clientName || '-'}</p>
+                   <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Cliente / Comercial</p>
+                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
+                        {order.clientName || '-'}
+                        {order.comercial && <span className="ml-1 text-[11px] text-blue-500 font-bold italic">({order.comercial})</span>}
+                   </p>
                 </div>
                 <div className="col-span-2">
                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Ref / Cor</p>

@@ -428,6 +428,7 @@ export const parseExcelFile = async (file: File): Promise<{ orders: Order[], hea
                 docNr: docNr,
                 clientCode: '',
                 clientName: String(row['C'] || '').trim(),
+                comercial: String(row['L'] || '').trim(),
                 issueDate: parseExcelDate(row['D']),
                 requestedDate: parseExcelDate(row['E']),
                 itemNr: itemNr,
@@ -524,6 +525,7 @@ export const parseSQLiteFile = async (file: File): Promise<{ orders: Order[], he
                 try { obj.sectorStopReasons = JSON.parse(obj.sectorStopReasons); } catch { obj.sectorStopReasons = {}; }
             }
             if (!obj.priority) obj.priority = 0;
+            if (!obj.comercial) obj.comercial = '';
             // Garantir que isManual seja boolean
             obj.isManual = obj.isManual === 1 || obj.isManual === true || obj.isManual === '1';
             
@@ -548,7 +550,7 @@ export const exportOrdersToSQLite = async (orders: Order[], headers: Record<stri
 
   const schema = `
     CREATE TABLE orders (
-      id TEXT PRIMARY KEY, docNr TEXT, clientCode TEXT, clientName TEXT,
+      id TEXT PRIMARY KEY, docNr TEXT, clientCode TEXT, clientName TEXT, comercial TEXT,
       issueDate INTEGER, requestedDate INTEGER, itemNr INTEGER, po TEXT,
       articleCode TEXT, reference TEXT, colorCode TEXT, colorDesc TEXT,
       size TEXT, family TEXT, sizeDesc TEXT, ean TEXT, qtyRequested REAL,
@@ -566,13 +568,13 @@ export const exportOrdersToSQLite = async (orders: Order[], headers: Record<stri
   const stmt = db.prepare(`
     INSERT INTO orders VALUES (
       ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     )
   `);
 
   orders.forEach(o => {
       stmt.run([
-        o.id, o.docNr, o.clientCode, o.clientName,
+        o.id, o.docNr, o.clientCode, o.clientName, o.comercial,
         o.issueDate ? o.issueDate.getTime() : null,
         o.requestedDate ? o.requestedDate.getTime() : null,
         o.itemNr, o.po, o.articleCode, o.reference, o.colorCode, o.colorDesc,
@@ -672,6 +674,7 @@ export const exportOrdersToExcel = (orders: Order[], customFileName?: string) =>
             // Cliente
             'Cód. Cliente': order.clientCode,
             'Cliente': order.clientName,
+            'Comercial': order.comercial,
             'PO': order.po,
 
             // Artigo
@@ -755,6 +758,7 @@ export const generateMockOrders = (count: number = 20): Order[] => {
     docNr: `ENC-2024-${1000 + i}`,
     clientCode: `C${100 + i}`,
     clientName: "CLIENTE EXEMPLO " + i,
+    comercial: "COMERCIAL " + (i % 3 + 1),
     issueDate: new Date(),
     requestedDate: new Date(Date.now() + 86400000 * 10),
     itemNr: 1,

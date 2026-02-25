@@ -46,6 +46,7 @@ export interface Order {
   docNr: string;
   clientCode: string;
   clientName: string;
+  comercial: string;
   issueDate: Date | null;
   requestedDate: Date | null;
   itemNr: number;
