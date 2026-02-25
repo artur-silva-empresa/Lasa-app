@@ -302,15 +302,18 @@ const App: React.FC = () => {
   };
   
   const getFirstAvailableView = (user: User | null): string => {
-    if (!user) return 'login';
-    if (user.permissions.dashboard !== 'none') return 'dashboard';
-    if (user.permissions.orders !== 'none') return 'orders';
-    if (user.permissions.timeline !== 'none') return 'timeline';
+    if (!user || !user.permissions) return 'login';
 
-    const firstSector = SECTORS.find(s => user.permissions.sectors[s.id] && user.permissions.sectors[s.id] !== 'none');
+    const perms = user.permissions;
+    if (perms.dashboard && perms.dashboard !== 'none') return 'dashboard';
+    if (perms.orders && perms.orders !== 'none') return 'orders';
+    if (perms.timeline && perms.timeline !== 'none') return 'timeline';
+
+    const sectors = perms.sectors || {};
+    const firstSector = SECTORS.find(s => sectors[s.id] && sectors[s.id] !== 'none');
     if (firstSector) return `sector-${firstSector.id}`;
 
-    if (user.permissions.config !== 'none' || user.permissions.stopReasons !== 'none') return 'config';
+    if ((perms.config && perms.config !== 'none') || (perms.stopReasons && perms.stopReasons !== 'none')) return 'config';
 
     return 'none';
   };
@@ -339,7 +342,10 @@ const App: React.FC = () => {
         const sectors = currentUser?.permissions?.sectors || {};
         const permission = sectors[sectorId] || 'none';
         if (permission === 'none') {
-            setActiveView('orders');
+            const nextView = getFirstAvailableView(currentUser);
+            if (nextView !== activeView) {
+                setActiveView(nextView);
+            }
             return null;
         }
 
@@ -370,13 +376,13 @@ const App: React.FC = () => {
 
     switch (activeView) {
       case 'dashboard':
-        if (currentUser?.permissions?.dashboard === 'none') {
+        if (!currentUser?.permissions?.dashboard || currentUser?.permissions?.dashboard === 'none') {
             const fallback = getFirstAvailableView(currentUser);
             if (fallback !== 'dashboard') { setActiveView(fallback); return null; }
         }
         return <Dashboard orders={orders} onNavigateToOrders={handleNavigateToOrders} />;
       case 'orders':
-        if (currentUser?.permissions?.orders === 'none') {
+        if (!currentUser?.permissions?.orders || currentUser?.permissions?.orders === 'none') {
             const fallback = getFirstAvailableView(currentUser);
             if (fallback !== 'orders') { setActiveView(fallback); return null; }
         }
@@ -392,13 +398,15 @@ const App: React.FC = () => {
           stopReasonsHierarchy={stopReasons}
         />;
       case 'timeline':
-        if (currentUser?.permissions?.timeline === 'none') {
+        if (!currentUser?.permissions?.timeline || currentUser?.permissions?.timeline === 'none') {
             const fallback = getFirstAvailableView(currentUser);
             if (fallback !== 'timeline') { setActiveView(fallback); return null; }
         }
         return <OrderTimeline orders={orders} onViewDetails={handleViewDetails} />;
       case 'config':
-        if (currentUser?.permissions?.config === 'none' && currentUser?.permissions?.stopReasons === 'none') {
+        const hasConfigPerm = currentUser?.permissions?.config && currentUser?.permissions?.config !== 'none';
+        const hasStopPerm = currentUser?.permissions?.stopReasons && currentUser?.permissions?.stopReasons !== 'none';
+        if (!hasConfigPerm && !hasStopPerm) {
             const fallback = getFirstAvailableView(currentUser);
             if (fallback !== 'config') { setActiveView(fallback); return null; }
         }

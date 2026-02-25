@@ -45,6 +45,12 @@ const initDB = (): Promise<IDBDatabase> => {
 // --- DATA PERSISTENCE HELPERS ---
 
 export const hashPassword = async (password: string): Promise<string> => {
+    // Fallback for non-secure contexts where crypto.subtle is undefined
+    if (!window.crypto || !window.crypto.subtle) {
+        console.warn("Crypto Subtle não disponível. A usar fallback inseguro (apenas para desenvolvimento/contextos HTTP).");
+        // Fallback extremamente simples (NÃO SEGURO para produção, mas evita crash)
+        return Array.from(password).reduce((acc, char) => acc + char.charCodeAt(0).toString(16), "");
+    }
     const msgUint8 = new TextEncoder().encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
