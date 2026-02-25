@@ -17,23 +17,6 @@
     <title>TexFlow - Gestão de Encomendas</title>
     <link rel="manifest" href="./manifest.json">
     <script>
-        // Check if we are incorrectly serving the source version instead of the build version
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && !window.location.hostname.startsWith('192.')) {
-            document.addEventListener('DOMContentLoaded', () => {
-                const scripts = Array.from(document.getElementsByTagName('script'));
-                const hasSourceScript = scripts.some(s => s.src.endsWith('.tsx') || s.src.endsWith('.ts'));
-                if (hasSourceScript) {
-                    const warnDiv = document.createElement('div');
-                    warnDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#fee2e2;color:#991b1b;padding:20px;z-index:100000;border-bottom:4px solid #ef4444;font-family:sans-serif;text-align:center;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);';
-                    warnDiv.innerHTML = '<h3 style="margin:0 0 10px 0;font-weight:bold;">ERRO DE CONFIGURAÇÃO DETECTADO</h3>' +
-                        '<p style="margin:0;font-size:14px;line-height:1.5;">O site está a tentar carregar o <strong>código-fonte (.tsx)</strong> em vez da versão compilada.<br>' +
-                        'Isto acontece porque o GitHub Pages está configurado para servir a pasta raiz do repositório.</p>' +
-                        '<p style="margin:10px 0 0 0;font-weight:bold;font-size:14px;">SOLUÇÃO: Vá às definições do Repositório -> <strong>Settings</strong> -> <strong>Pages</strong> e altere o "Source" para <strong>"GitHub Actions"</strong>.</p>';
-                    document.body.prepend(warnDiv);
-                }
-            });
-        }
-
         // Global error handler for diagnosis
         window.onerror = function(msg, url, line, col, error) {
             const errorDiv = document.createElement('div');
