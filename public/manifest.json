@@ -1,4 +1,3 @@
-
 {
   "short_name": "TexFlow",
   "name": "TexFlow - Gestão de Produção Têxtil",
@@ -16,18 +15,11 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "./index.html",
+  "start_url": "/Lasa-app/",
+  "scope": "/Lasa-app/",
   "display": "standalone",
   "orientation": "any",
   "theme_color": "#0f172a",
   "background_color": "#f8fafc",
-  "categories": ["business", "productivity"],
-  "screenshots": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/2611/2611152.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ]
+  "categories": ["business", "productivity"]
 }
