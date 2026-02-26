@@ -496,7 +496,7 @@ const App: React.FC = () => {
       )}
 
       {notification && (
-        <div className="fixed top-6 right-6 z-[115] animate-in slide-in-from-right duration-300 max-w-md">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[115] animate-in slide-in-from-top duration-300 max-w-md w-[calc(100%-3rem)] md:w-auto">
             <div className="bg-slate-800 dark:bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-start gap-4 border border-slate-700 dark:border-slate-800">
                 <div className="bg-emerald-500 rounded-full p-1 mt-0.5 shrink-0 text-slate-900">
                     <CheckCircle2 size={16} strokeWidth={3} />
